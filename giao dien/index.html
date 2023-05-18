@@ -1,53 +1,130 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Temperature Chart</title>
+  <title>Sensor Data Charts</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.6.1/socket.io.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js"></script>
   <style>
     .chart-container {
       position: relative;
-       margin-bottom: 200px; /* Khoảng trống giữa các biểu đồ */
+      margin-bottom: 200px;
     }
     .chart-container canvas {
       position: absolute;
       top: 0;
       left: 0;
-       
+    }
+    .chart-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 200px;
+    }
+    .chart-container {
+      width: 48%; /* Đặt chiều rộng của mỗi biểu đồ */
+      height: 200px;
+    }
+    .chart-container canvas {
+      width: 100%;
+      height: 100%;
     }
   </style>
 </head>
 <body>
-  <div class="chart-container" style="width: 800px; height: 200px;">
-    <canvas id="temperature-chart"></canvas>
+  <div class="chart-row">
+    <div class="chart-container">
+      <canvas id="temperature-chart"></canvas>
+    </div>
+    <div class="chart-container">
+      <canvas id="humidity-chart"></canvas>
+    </div>
   </div>
-  
+
+  <div class="chart-row">
+    <div class="chart-container">
+      <canvas id="pressure-chart"></canvas>
+    </div>
+    <div class="chart-container">
+      <canvas id="altitude-chart"></canvas>
+    </div>
+  </div>
+
   <script>
     var socket = io();
-var chartData = {
-  labels: [],
-  datasets: [{
-    label: 'Temperature (°C)',
-    data: [],
-    backgroundColor: [],
-    borderWidth: 1,
-    tension: 0.3
-  }]
-};
+    var chartData = {
+      temperature: {
+        labels: [],
+        datasets: [{
+          label: 'Temperature (°C)',
+          data: [],
+          backgroundColor: [],
+          borderWidth: 1,
+          tension: 0.3
+        }]
+      },
+      humidity: {
+        labels: [],
+        datasets: [{
+          label: 'Humidity (%)',
+          data: [],
+          backgroundColor: [],
+          borderWidth: 1,
+          tension: 0.3
+        }]
+      },
+      pressure: {
+        labels: [],
+        datasets: [{
+          label: 'Pressure (hPa)',
+          data: [],
+          backgroundColor: [],
+          borderWidth: 1,
+          tension: 0.3
+        }]
+      },
+      altitude: {
+        labels: [],
+        datasets: [{
+          label: 'Altitude (m)',
+          data: [],
+          backgroundColor: [],
+          borderWidth: 1,
+          tension: 0.3
+        }]
+      }
+    };
 
+    function createChart(containerId, chartData) {
+      var ctx = document.getElementById(containerId).getContext('2d');
+      return new Chart(ctx, {
+        type: 'bar',
+        data: chartData,
+        options: {
+          responsive: true,
+          scales: {
+            x: {
+              stacked: true,
+            },
+            y: {
+              suggestedMin: 0,
+              suggestedMax: 200
+            }
+          }
+        }
+      });
+    }
+
+    var charts = {
+      temperature: createChart('temperature-chart', chartData.temperature),
+      humidity: createChart('humidity-chart', chartData.humidity),
+      pressure: createChart('pressure-chart', chartData.pressure),
+      altitude: createChart('altitude-chart', chartData.altitude)
+    };
 var maxColumns = 20;
-var chartCount = 1;
-
-socket.on('temperature', function (data) {
-  console.log('Received new temperature data: ' + data);
-
-  // Add new temperature data to the chart
-  chartData.labels.push(new Date().toLocaleTimeString());
-  chartData.datasets[0].data.push(parseFloat(data));
-  chartData.datasets[0].backgroundColor.push(parseFloat(data) > 100 ? 'red' : 'rgb(75, 192, 192)');
-
-  if (chartData.labels.length > maxColumns) {
-    // Create a new chart container
+    socket.on('temperature', function (data) {
+      chartData.temperature.labels.push(new Date().toLocaleTimeString());
+      chartData.temperature.datasets[0].data.push(parseFloat(data));
+      chartData.temperature.datasets[0].backgroundColor.push(parseFloat(data) > 100 ? 'red' : 'rgb(75, 192, 192)');
+       if (chartData.temperature.labels.length > maxColumns) {
     var newChartContainer = document.createElement('div');
     newChartContainer.className = 'chart-container';
     newChartContainer.style.width = '800px';
@@ -55,26 +132,9 @@ socket.on('temperature', function (data) {
     newChartContainer.innerHTML = '<canvas id="temperature-chart-' + chartCount + '"></canvas>';
     document.body.appendChild(newChartContainer);
 
-    // Create a new chart
-    var newChart = new Chart('temperature-chart-' + chartCount, {
-      type: 'bar',
-      data: chartData,
-      options: {
-        responsive: true,
-        scales: {
-          x: {
-            stacked: true,
-          },
-          y: {
-            suggestedMin: 0,
-            suggestedMax: 200
-          }
-        }
-      }
-    });
+    charts.temperature = createChart('temperature-chart-' + chartCount, chartData.temperature);
 
-    // Reset chart data for the next set of values
-    chartData = {
+    chartData.temperature = {
       labels: [],
       datasets: [{
         label: 'Temperature (°C)',
@@ -85,29 +145,105 @@ socket.on('temperature', function (data) {
       }]
     };
 
-    // Increment the chart count
     chartCount++;
   }
-  chart.update();
-});
-var ctx = document.getElementById('temperature-chart').getContext('2d');
-var chart = new Chart(ctx, {
-  type: 'bar',
-  data: chartData,
-  options: {
-    responsive: true,
-    scales: {
-      x: {
-        stacked: true,
-      },
-      y: {
-        suggestedMin: 0,
-        suggestedMax: 200
-      }
-    }
-  }
+
+  charts.temperature.update();
 });
 
+socket.on('humidity', function (data) {
+  chartData.humidity.labels.push(new Date().toLocaleTimeString());
+  chartData.humidity.datasets[0].data.push(parseFloat(data));
+  chartData.humidity.datasets[0].backgroundColor.push(parseFloat(data) > 80 ? 'blue' : 'rgb(75, 192, 192)');
+
+  if (chartData.humidity.labels.length > maxColumns) {
+    var newChartContainer = document.createElement('div');
+    newChartContainer.className = 'chart-container';
+    newChartContainer.style.width = '800px';
+    newChartContainer.style.height = '200px';
+    newChartContainer.innerHTML = '<canvas id="humidity-chart-' + chartCount + '"></canvas>';
+    document.body.appendChild(newChartContainer);
+
+    charts.humidity = createChart('humidity-chart-' + chartCount, chartData.humidity);
+
+    chartData.humidity = {
+      labels: [],
+      datasets: [{
+        label: 'Humidity (%)',
+        data: [],
+        backgroundColor: [],
+        borderWidth: 1,
+        tension: 0.3
+      }]
+    };
+
+    chartCount++;
+  }
+
+  charts.humidity.update();
+});
+
+socket.on('pressure', function (data) {
+  chartData.pressure.labels.push(new Date().toLocaleTimeString());
+  chartData.pressure.datasets[0].data.push(parseFloat(data));
+  chartData.pressure.datasets[0].backgroundColor.push(parseFloat(data) > 1000 ? 'yellow' : 'rgb(75, 192, 192)');
+
+  if (chartData.pressure.labels.length > maxColumns) {
+    var newChartContainer = document.createElement('div');
+    newChartContainer.className = 'chart-container';
+    newChartContainer.style.width = '800px';
+    newChartContainer.style.height = '200px';
+    newChartContainer.innerHTML = '<canvas id="pressure-chart-' + chartCount + '"></canvas>';
+    document.body.appendChild(newChartContainer);
+
+    charts.pressure = createChart('pressure-chart-' + chartCount, chartData.pressure);
+
+    chartData.pressure = {
+      labels: [],
+      datasets: [{
+        label: 'Pressure (hPa)',
+        data: [],
+        backgroundColor: [],
+        borderWidth: 1,
+        tension: 0.3
+      }]
+    };
+
+    chartCount++;
+  }
+
+  charts.pressure.update();
+});
+
+socket.on('altitude', function (data) {
+  chartData.altitude.labels.push(new Date().toLocaleTimeString());
+  chartData.altitude.datasets[0].data.push(parseFloat(data));
+  chartData.altitude.datasets[0].backgroundColor.push(parseFloat(data) > 500 ? 'green' : 'rgb(75, 192, 192)');
+if (chartData.altitude.labels.length > maxColumns) {
+var newChartContainer = document.createElement('div');
+newChartContainer.className = 'chart-container';
+newChartContainer.style.width = '800px';
+newChartContainer.style.height = '200px';
+newChartContainer.innerHTML = '<canvas id="altitude-chart-' + chartCount + '"></canvas>';
+document.body.appendChild(newChartContainer);
+ charts.altitude = createChart('altitude-chart-' + chartCount, chartData.altitude);
+
+    chartData.altitude = {
+      labels: [],
+      datasets: [{
+        label: 'Altitude (m)',
+        data: [],
+        backgroundColor: [],
+        borderWidth: 1,
+        tension: 0.3
+      }]
+    };
+
+    chartCount++;
+  }
+
+  charts.altitude.update();
+});
   </script>
 </body>
 </html>
