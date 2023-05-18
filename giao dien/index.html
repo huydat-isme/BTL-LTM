@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Temperature Chart</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.6.1/socket.io.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js"></script>
+  <style>
+    .chart-container {
+      position: relative;
+       margin-bottom: 200px; /* Khoảng trống giữa các biểu đồ */
+    }
+    .chart-container canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+       
+    }
+  </style>
+</head>
+<body>
+  <div class="chart-container" style="width: 800px; height: 200px;">
+    <canvas id="temperature-chart"></canvas>
+  </div>
+  
+  <script>
+    var socket = io();
+var chartData = {
+  labels: [],
+  datasets: [{
+    label: 'Temperature (°C)',
+    data: [],
+    backgroundColor: [],
+    borderWidth: 1,
+    tension: 0.3
+  }]
+};
+
+var maxColumns = 20;
+var chartCount = 1;
+
+socket.on('temperature', function (data) {
+  console.log('Received new temperature data: ' + data);
+
+  // Add new temperature data to the chart
+  chartData.labels.push(new Date().toLocaleTimeString());
+  chartData.datasets[0].data.push(parseFloat(data));
+  chartData.datasets[0].backgroundColor.push(parseFloat(data) > 100 ? 'red' : 'rgb(75, 192, 192)');
+
+  if (chartData.labels.length > maxColumns) {
+    // Create a new chart container
+    var newChartContainer = document.createElement('div');
+    newChartContainer.className = 'chart-container';
+    newChartContainer.style.width = '800px';
+    newChartContainer.style.height = '200px';
+    newChartContainer.innerHTML = '<canvas id="temperature-chart-' + chartCount + '"></canvas>';
+    document.body.appendChild(newChartContainer);
+
+    // Create a new chart
+    var newChart = new Chart('temperature-chart-' + chartCount, {
+      type: 'bar',
+      data: chartData,
+      options: {
+        responsive: true,
+        scales: {
+          x: {
+            stacked: true,
+          },
+          y: {
+            suggestedMin: 0,
+            suggestedMax: 200
+          }
+        }
+      }
+    });
+
+    // Reset chart data for the next set of values
+    chartData = {
+      labels: [],
+      datasets: [{
+        label: 'Temperature (°C)',
+        data: [],
+        backgroundColor: [],
+        borderWidth: 1,
+        tension: 0.3
+      }]
+    };
+
+    // Increment the chart count
+    chartCount++;
+  }
+  chart.update();
+});
+var ctx = document.getElementById('temperature-chart').getContext('2d');
+var chart = new Chart(ctx, {
+  type: 'bar',
+  data: chartData,
+  options: {
+    responsive: true,
+    scales: {
+      x: {
+        stacked: true,
+      },
+      y: {
+        suggestedMin: 0,
+        suggestedMax: 200
+      }
+    }
+  }
+});
+
+  </script>
+</body>
+</html>
