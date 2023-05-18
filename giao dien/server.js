@@ -16,17 +16,43 @@ io.on('connection', function(socket){
 });
 
 client.on('connect', function () {
-  client.subscribe('sensors', function (err) {
+  client.subscribe('Temperature', function (err) {
     if (!err) {
-      console.log('MQTT client connected');
+      console.log('MQTT client connected Temperature' );
+    }
+  });
+  client.subscribe('Humidity', function (err) {
+    if (!err) {
+      console.log('MQTT client connected Humidity' );
+    }
+  });
+  client.subscribe('Pressure', function (err) {
+    if (!err) {
+      console.log('MQTT client connected Pressure' );
+    }
+  });
+  client.subscribe('Altitude', function (err) {
+    if (!err) {
+      console.log('MQTT client connected Altitude' );
     }
   });
 });
 
 client.on('message', function (topic, message) {
-  console.log('Received new temperature data: ' + message.toString());
-  io.emit('temperature', message.toString());
+  console.log('Received new message from topic ' + topic + ': ' + message.toString());
+  
+  if (topic === 'Temperature') {
+    io.emit('temperature', message.toString());
+  } else if (topic === 'Humidity') {
+    io.emit('humidity', message.toString());
+  } else if (topic === 'Pressure') {
+    io.emit('pressure', message.toString());
+  }else if (topic === 'Altitude') {
+    io.emit('altitude', message.toString());
+  }
+
 });
+
 
 http.listen(3000, function(){
   console.log('Server is listening on port 3000');
