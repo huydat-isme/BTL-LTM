@@ -1,7 +1,7 @@
 # Lập trình mạng - MQTT
 ---
 ## Thông tin chung
-1. Nhóm: 11  
+1. Nhóm: 10 
 2. Thành viên + nhiệm vụ:
     * Nguyễn Đức Nam:
     * Đỗ Minh Thái:
