@@ -36,6 +36,16 @@ client.on('connect', function () {
       console.log('MQTT client connected Altitude' );
     }
   });
+   client.subscribe('latency', function (err) {
+    if (!err) {
+      console.log('MQTT client connected latency' );
+    }
+  });
+   client.subscribe('NodeEstimation', function (err) {
+    if (!err) {
+      console.log('MQTT client connected NodeEstimation' );
+    }
+  });
 });
 
 client.on('message', function (topic, message) {
@@ -49,6 +59,12 @@ client.on('message', function (topic, message) {
     io.emit('pressure', message.toString());
   }else if (topic === 'Altitude') {
     io.emit('altitude', message.toString());
+  }
+  else if (topic === 'latency') {
+    io.emit('latency', message.toString());
+  }
+  else if (topic === 'NodeEstimation') {
+    io.emit('nodeEstimation', message.toString());
   }
 
 });
